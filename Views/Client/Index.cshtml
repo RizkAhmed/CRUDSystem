@@ -1,0 +1,131 @@
+﻿﻿@{
+    @model List<Client>
+    ViewData["Title"] = "Home Page";
+    int index = 0;
+}
+<link href="~/lib/datatables/datatables.css" rel="stylesheet" />
+<link href="~/lib/datatables/datatables.min.css" rel="stylesheet" />
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h3 class="">العملاء</h3>
+        @if (User.IsInRole("DataEntry"))
+        {
+            <a class="btn btn-primary" asp-action="Create">أضافة جديد</a>
+        }
+    </div>
+    <hr />
+    <table id="myTable" class="display hover">
+        <thead>
+            <tr class="text-right">
+                <th scope="col">#</th>
+                <th scope="col">الأسم الأول</th>
+                <th scope="col">الأسم الأخير</th>
+                <th scope="col">الرقم القومى</th>
+                <th scope="col">النوع</th>
+                <th scope="col">المحافظة</th>
+                <th scope="col">المركز</th>
+                <th scope="col">القرية</th>
+                @if (User.IsInRole("DataEntry"))
+                {
+                   <th></th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in Model)
+            {
+                <tr id="row_@client.ClientID">
+                    <td>@(++index)</td>
+                    <td>@client.FirstName</td>
+                    <td>@client.LastName</td>
+                    <td>@client.NationalID</td>
+                    <td>@(client.Gender == "male" ? "ذكر" : "أنثى")</td>
+                    <td>@client.Governorate.GovernorateName</td>
+                    <td>@client.Center.CenterName</td>
+                    <td>@client.Village.VillageName</td>
+                    @if (User.IsInRole("DataEntry"))
+                    {
+                        <td>
+                            <a class="btn btn-success" asp-action="Edit" asp-route-id="@client.ClientID"><i class="bi bi-pencil-square"></i></a>
+                            <a class="btn btn-danger" onclick="Remove(@client.ClientID)"><i class="bi bi-trash"></i></a>
+                        </td>
+                    }
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts
+    {
+
+    <script src="~/lib/datatables/datatables.js"></script>
+    <script src="~/lib/datatables/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#myTable').DataTable(
+                {
+                    "oLanguage": {
+                        "sSearch": "بحث : ",
+                        "oPaginate": {
+                            "sNext": "الصفحة التالية",
+                            "sPrevious": "الصفحة السابقة"
+                        },
+                        "sInfoFiltered": "",
+                        "sInfoEmpty": "لا توجد بيانات"
+                        ,
+                        "sZeroRecords": "لا يوجد بيانات",
+                        "sLengthMenu": 'عرض <select>' +
+                            '<option value="10">10</option>' +
+                            '<option value="20">20</option>' +
+                            '<option value="30">30</option>' +
+                            '<option value="40">40</option>' +
+                            '<option value="50">50</option>' +
+                            '<option value="-1">الكل</option>' +
+                            '</select> صفوف',
+                        "sInfo": "عرض  _START_ إلى _END_ من إجمالى _TOTAL_"
+                        //"sInfo": "Got a total of _TOTAL_ entries to show (_START_ to _END_)"
+
+                    }
+                }
+            );
+        });
+
+        function Remove(id) {
+            //ToDO: remove user
+            var row = document.getElementById("row_" + id)
+
+            bootbox.confirm({
+                message: 'تأكيد حذف العميل',
+                buttons: {
+                    confirm: {
+                        label: 'حذف',
+                        className: 'btn-danger'
+                    },
+                    cancel: {
+                        label: 'إلغاء',
+                        className: 'btn-primary'
+                    }
+                },
+                callback: function (result) {
+                    if (result) {
+                        $.ajax({
+                            type: "POST",
+                            url: `/Client/Delete/${id}`,
+                            dataType: "text",
+                            success: function (response) {
+                                row.remove();
+                            },
+                            error: function () {
+                                alert("فشل عملية الحذف")
+                            }
+                        });
+                    }
+                    console.log('This was logged in the callback: ' + result);
+                }
+            });
+        }
+
+    </script>
+}

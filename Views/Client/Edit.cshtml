@@ -1,0 +1,149 @@
+﻿@model CRUDSystem.ViewModels.ClientViewModel
+
+@{
+    ViewData["Title"] = "Create";
+    SelectList GovItems = new SelectList(Model.Governorates, "GovernorateID", "GovernorateName");
+
+}
+
+<h1 class="text-center text-primary mb-3">تعديل عميل</h1>
+
+<hr />
+<div class="row mt-5">
+
+
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="ClientID" class="form-control" />
+        <div class="mb-5">
+            <span class="mb-5" style="display:flex;flex-direction:row;">
+                <div class="form-group ms-4">
+                    <label asp-for="FirstName" class="control-label mb-1">الاسم الأول</label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group w-25">
+                    <label asp-for="LastName" class="control-label mb-1">الاسم الأخير</label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+            </span>
+            <span class="mb-5" style="display:flex;flex-direction:row;">
+                <div class="form-group ms-4">
+                    <label asp-for="NationalID" class="control-label mb-1">الرقم القومى</label>
+                    <input asp-for="NationalID" class="form-control" />
+                    <span asp-validation-for="NationalID" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Gender" class="control-label mb-1">النوع</label>
+                    <select asp-for="Gender" class="form-control">
+                        <option value="">--أختر النوع--</option>
+                        <option value="male">ذكر</option>
+                        <option value="female">أنثى</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
+            </span>
+            <span class="mb-5" style="display:flex;flex-direction:row;">
+
+                <div class="form-group ms-4">
+                    <label asp-for="GovernorateID" class="control-label mb-1">المحافظة</label>
+                    <select id="GovernorateID" asp-for="GovernorateID" asp-items="GovItems" class="form-control" onchange="GetCenters()">
+                        <option value="">--أختر المحافظة--</option>
+                    </select>
+                    <span asp-validation-for="GovernorateID" class="text-danger"></span>
+                </div>
+                <div class="form-group ms-4">
+                    <label asp-for="CenterID" class="control-label mb-1">المركز</label>
+                    <select id="CenterID" asp-for="CenterID" class="form-control" onchange="GetVillages()">
+                        <option value="">--أختر المركز--</option>
+                        @foreach (var center in Model.Centers.Where(c => c.GovernorateID == Model.GovernorateID))
+                        {
+                            if (Model.CenterID == center.CenterID)
+                            {
+                                <option value="@center.CenterID" selected> @center.CenterName</option>
+                            }
+                            else
+                            {
+                                <option value="@center.CenterID"> @center.CenterName</option>
+
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="CenterID" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="VillageID" class="control-label mb-1">القرية</label>
+                    <select id="VillageID" asp-for="VillageID" class="form-control">
+                        <option value="">--أختر القرية--</option>
+                        @foreach (var vilage in Model.Villages.Where(v=>v.CenterID==Model.CenterID))
+                        {
+                            if (Model.VillageID == vilage.VillageID)
+                            {
+                                <option value="@vilage.VillageID" selected> @vilage.VillageName</option>
+                            }
+                            else
+                            {
+                                <option value="@vilage.VillageID"> @vilage.VillageName</option>
+
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="VillageID" class="text-danger"></span>
+                </div>
+            </span>
+
+        </div>
+
+
+        <div class="form-group">
+            <input type="submit" value="تعديل" class="btn btn-primary" />
+            <a class="btn btn-secondary" asp-action="Index">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function GetCenters() {
+            var GovernorateID = document.getElementById("GovernorateID").value;
+            console.log(GovernorateID);
+
+            $.ajax({
+                url: `/Client/GetCenters?govId=${GovernorateID}`,
+                success: function (result) {
+                    document.getElementById("CenterID").innerHTML = `<option value="">--أختر المركز--</option>`;
+                    console.log(result);
+
+                    for (let i of result) {
+                        document.getElementById("CenterID").innerHTML +=
+                            `<option value=${i.centerID}>${i.centerName}</option>`
+                    }
+                }
+            });
+        }
+
+        function GetVillages() {
+            var CenterID = document.getElementById("CenterID").value;
+            console.log(CenterID);
+
+            $.ajax({
+                url: `/Client/GetVillages?centerId=${CenterID}`,
+                success: function (result) {
+                    document.getElementById("VillageID").innerHTML = `<option value="">--أختر القرية--</option>`;
+                    console.log(result);
+
+                    for (let i of result) {
+                        document.getElementById("VillageID").innerHTML +=
+                            `<option value=${i.villageID}>${i.villageName}</option>`
+                    }
+                }
+            });
+        }
+    </script>
+}
